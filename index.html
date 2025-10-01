@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Job Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --mcp-background: #101827;
+            --mcp-light-background: #1a2230;
+            --mcp-border: #334155;
+            --mcp-text: #e2e8f0;
+            --mcp-primary: #4f9cff;
+            --mcp-secondary: #8c7eff;
+            --mcp-success: #22c55e;
+            --mcp-warning: #facc15;
+            --mcp-error: #ef4444;
+        }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .font-mono {
+             font-family: 'Roboto Mono', monospace;
+        }
+        .animate-pulse-fast {
+            animation: pulse-fast 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-fast {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        .animate-blink {
+            animation: blink 1s step-start 0s infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        .shadow-glow-secondary {
+            box-shadow: 0 0 20px 0 rgba(140, 126, 255, 0.5);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'mcp-background': 'var(--mcp-background)',
+                        'mcp-light-background': 'var(--mcp-light-background)',
+                        'mcp-border': 'var(--mcp-border)',
+                        'mcp-text': 'var(--mcp-text)',
+                        'mcp-primary': 'var(--mcp-primary)',
+                        'mcp-secondary': 'var(--mcp-secondary)',
+                        'mcp-success': 'var(--mcp-success)',
+                        'mcp-warning': 'var(--mcp-warning)',
+                        'mcp-error': 'var(--mcp-error)',
+                    },
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-mcp-background">
+    <div id="root"></div>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://aistudiocdn.com/react@^19.1.1",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+        "react/": "https://aistudiocdn.com/react@^19.1.1/",
+        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.21.0"
+      }
+    }
+    </script>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+# Copy these into your deployment environment (.env.local locally, Vercel Project > Settings > Environment Variables)
+
+# Clerk
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_************************
+
+# Gemini (Google AI Studio)
+API_KEY=gemini_api_key_here
+
+# App public URL (used for Stripe redirect/return)
+PUBLIC_APP_URL=https://your-app.vercel.app
+
+# Stripe
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_************************
+STRIPE_SECRET_KEY=sk_test_************************
+STRIPE_WEBHOOK_SECRET=whsec_************************
+STRIPE_PRICE_PRO_MONTHLY=price_************************
+# Optional annual price
+# STRIPE_PRICE_PRO_YEARLY=price_************************
+
+# Trial Management
+TRIAL_DURATION_DAYS=7
+TRIAL_SEARCH_LIMIT=5
+TRIAL_APPLY_LIMIT=3
+
+# Email Reminders (Resend)
+RESEND_API_KEY=re_************************
+FROM_EMAIL=noreply@yourdomain.com
+
+# Usage Metering (optional external store)
+# METERING_STORE_URL=https://your-db-api.com/metering
+

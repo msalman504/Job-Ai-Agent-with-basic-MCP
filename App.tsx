@@ -7,8 +7,10 @@ import { ControlPanel } from './components/ControlPanel';
 import { AgentStatusPanel } from './components/AgentStatusPanel';
 import { ActivityLog } from './components/ActivityLog';
 import { ResultsPanel } from './components/ResultsPanel';
+import { UserProfile } from './components/UserProfile';
 import { Agent, AgentName, AgentStatus, Job, JobApplyStatus, LogEntry, LogLevel } from './types';
 import * as geminiService from './services/geminiService';
+import { useSubscription } from './auth/SubscriptionContext';
 
 const initialAgents: Agent[] = [
   { name: AgentName.JOB_SEARCH, status: AgentStatus.IDLE },
@@ -16,6 +18,8 @@ const initialAgents: Agent[] = [
 ];
 
 function App() {
+  const { role } = useSubscription();
+  const [currentView, setCurrentView] = useState<'dashboard' | 'profile'>('dashboard');
   const [resume, setResume] = useState('');
   const [timeFilter, setTimeFilter] = useState('7');
   const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +45,30 @@ function App() {
   }, []);
 
   const handleStart = async () => {
+    if (!isPremium) {
+      addLog(LogLevel.INFO, 'Free plan: limited run. Upgrade for unlimited searches and applies.');
+    }
+    
+    // Check usage limits
+    try {
+      const response = await fetch('/api/metering', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'check', 
+          searches: 0, // TODO: get from localStorage or DB
+          applies: 0   // TODO: get from localStorage or DB
+        }),
+      });
+      const data = await response.json();
+      if (!data.canSearch) {
+        addLog(LogLevel.WARN, 'Search limit reached. Please upgrade to continue.');
+        return;
+      }
+    } catch (err) {
+      addLog(LogLevel.WARN, 'Could not check usage limits. Proceeding...');
+    }
+    
     setIsLoading(true);
     setJobs([]);
     setLogs([]);
@@ -52,7 +80,10 @@ function App() {
     addLog(LogLevel.SEARCH, `Searching for jobs from the last ${timeFilter} days based on resume.`);
     
     try {
-        const foundJobs = await geminiService.searchJobs(resume, timeFilter);
+        let foundJobs = await geminiService.searchJobs(resume, timeFilter);
+        if (!isPremium) {
+            foundJobs = foundJobs.slice(0, 3);
+        }
         if (foundJobs.length === 0) {
             addLog(LogLevel.WARN, 'Job Search Agent found no new job targets. Protocol finished.');
             updateAgentStatus(AgentName.JOB_SEARCH, AgentStatus.COMPLETED);
@@ -115,11 +146,88 @@ function App() {
     addLog(LogLevel.APPLY, `Application for "${job.title}" dispatched to user for final submission.`);
   };
 
+  const startCheckout = async (billingInterval: 'month' | 'year' = 'month') => {
+    try {
+      // Temporary: Use direct Stripe test link
+      const stripeTestUrl = 'https://buy.stripe.com/test_00gbLd8GucKXeKk6oo';
+      
+      // Store a mock session ID for testing
+      window.localStorage.setItem('job-agent.checkoutSessionId', 'test_session_' + Date.now());
+      window.localStorage.setItem('job-agent.customerId', 'test_customer_' + Date.now());
+      
+      addLog(LogLevel.INFO, 'Redirecting to Stripe checkout...');
+      window.location.href = stripeTestUrl;
+    } catch (err) {
+      addLog(LogLevel.ERROR, 'Checkout failed.');
+    }
+  };
+
+  const isPremium = role === 'subscriber' || role === 'owner' || role === 'admin';
+
+  const openBillingPortal = async () => {
+    try {
+      const storedCustomerId = window.localStorage.getItem('job-agent.customerId');
+      if (!storedCustomerId) {
+        addLog(LogLevel.WARN, 'No Stripe customerId found. Complete checkout first.');
+        return;
+      }
+      const resp = await fetch('/api/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerId: storedCustomerId })
+      });
+      const data = await resp.json();
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        addLog(LogLevel.ERROR, 'Unable to open billing portal.');
+      }
+    } catch (e) {
+      addLog(LogLevel.ERROR, 'Billing portal error.');
+    }
+  };
+
+  if (currentView === 'profile') {
+    return <UserProfile />;
+  }
+
   return (
     <div className="bg-mcp-background text-mcp-text min-h-screen p-4 sm:p-6 lg:p-8 font-sans">
       <header className="text-center mb-8">
         <h1 className="text-4xl font-bold text-mcp-primary tracking-widest uppercase">Job Agent</h1>
         <p className="text-mcp-secondary">Automated Job Search & Application Assistant</p>
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <button
+            onClick={() => setCurrentView('profile')}
+            className="px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-700"
+          >
+            Profile
+          </button>
+          {!isPremium && (
+            <>
+              <button
+                onClick={() => startCheckout('month')}
+                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Upgrade to Pro (Monthly)
+              </button>
+              <button
+                onClick={() => startCheckout('year')}
+                className="px-4 py-2 rounded bg-slate-600 text-white hover:bg-slate-700"
+              >
+                Annual (Save)
+              </button>
+            </>
+          )}
+          {isPremium && (
+            <button
+              onClick={openBillingPortal}
+              className="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700"
+            >
+              Manage Billing
+            </button>
+          )}
+        </div>
       </header>
       
       <main className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">

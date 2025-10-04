@@ -64,14 +64,17 @@ To run this project locally, you will need Node.js and npm installed.
 3.  **Set up environment variables:**
     -   The application loads the Gemini API key from an environment variable named `process.env.API_KEY`. For local development, you would typically use a `.env` file and a tool like Vite or Create React App to load it.
 
-4.  **Install dependencies and run:**
-    -   This project is configured to run in an environment where dependencies are managed. For a standard local setup, you would run:
+4.  **Environment variables:**
+    - Create a `.env.local` file with:
     ```bash
-    # Install dependencies
-    npm install
+    VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxx_from_clerk
+    API_KEY=your_gemini_api_key
+    ```
 
-    # Run the development server
-    npm start
+5.  **Install dependencies and run:**
+    ```bash
+    npm install
+    npm run dev
     ```
 
 ---
